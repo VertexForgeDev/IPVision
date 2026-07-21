@@ -17,65 +17,60 @@ const exportCsvBtn = document.getElementById('exportCsvBtn');
 
 let currentData = null;
 
-// Helper: Set status badge state
 function setStatus(text, type = 'neutral') {
-  statusBadge.textContent = text;
-  statusBadge.className = 'status-badge ' + type;
-}
-
-// Helper: Show/Hide Spinner
-function toggleLoading(isLoading) {
-  if (isLoading) {
-    loadingSpinner.classList.remove('hidden');
-    lookupBtn.disabled = true;
-    myIpBtn.disabled = true;
-  } else {
-    loadingSpinner.classList.add('hidden');
-    lookupBtn.disabled = false;
-    myIpBtn.disabled = false;
+  if (statusBadge) {
+    statusBadge.textContent = text;
+    statusBadge.className = 'status-badge ' + type;
   }
 }
 
-// Fetch IP data from your Cloudflare Worker Proxy
+function toggleLoading(isLoading) {
+  if (loadingSpinner) {
+    isLoading ? loadingSpinner.classList.remove('hidden') : loadingSpinner.classList.add('hidden');
+  }
+  if (lookupBtn) lookupBtn.disabled = isLoading;
+  if (myIpBtn) myIpBtn.disabled = isLoading;
+}
+
 async function fetchIpData(ip = '') {
   toggleLoading(true);
   setStatus('Fetching data...', 'neutral');
 
   try {
-    const url = ip ? `${PROXY_ENDPOINT}?ip=${encodeURIComponent(ip)}` : PROXY_ENDPOINT;
+    const cleanIp = ip.trim();
+    const url = cleanIp ? `${PROXY_ENDPOINT}?ip=${encodeURIComponent(cleanIp)}` : PROXY_ENDPOINT;
+    
     const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
     currentData = data;
     displayResults(data);
     setStatus('Ready', 'success');
   } catch (error) {
     console.error('Fetch error:', error);
-    setStatus('Error fetching IP data', 'error');
+    setStatus('Error fetching data', 'error');
   } finally {
     toggleLoading(false);
   }
 }
 
-// Render data into the HTML cards
 function displayResults(data) {
-  ipAddressEl.textContent = data.ip || data.query || 'N/A';
+  if (ipAddressEl) ipAddressEl.textContent = data.ip || data.query || 'N/A';
   
   const city = data.city || '';
   const region = data.region || data.regionName || '';
   const country = data.country || data.country_name || '';
   const locArr = [city, region, country].filter(Boolean);
-  locationEl.textContent = locArr.length > 0 ? locArr.join(', ') : 'N/A';
-
-  ispEl.textContent = data.isp || data.org || data.connection?.isp || 'N/A';
-  timezoneEl.textContent = data.timezone?.id || data.timezone || 'N/A';
+  
+  if (locationEl) locationEl.textContent = locArr.length > 0 ? locArr.join(', ') : 'N/A';
+  if (ispEl) ispEl.textContent = data.isp || data.org || 'N/A';
+  if (timezoneEl) timezoneEl.textContent = typeof data.timezone === 'string' ? data.timezone : (data.timezone?.id || 'N/A');
 }
 
-// Export functions
+// Helper: File Downloader
 function downloadFile(content, filename, contentType) {
   const blob = new Blob([content], { type: contentType });
   const url = URL.createObjectURL(blob);
@@ -88,39 +83,41 @@ function downloadFile(content, filename, contentType) {
   URL.revokeObjectURL(url);
 }
 
-exportJsonBtn.addEventListener('click', () => {
-  if (!currentData) return alert('No data to export!');
-  const jsonStr = JSON.stringify(currentData, null, 2);
-  downloadFile(jsonStr, 'ipvision-data.json', 'application/json');
-});
+// Event Listeners with Safe Null Checks
+if (lookupBtn) {
+  lookupBtn.addEventListener('click', () => fetchIpData(ipInput ? ipInput.value : ''));
+}
 
-exportCsvBtn.addEventListener('click', () => {
-  if (!currentData) return alert('No data to export!');
-  const keys = Object.keys(currentData);
-  const values = Object.values(currentData).map(val => 
-    typeof val === 'object' ? `"${JSON.stringify(val).replace(/"/g, '""')}"` : `"${val}"`
-  );
-  const csvStr = `${keys.join(',')}\n${values.join(',')}`;
-  downloadFile(csvStr, 'ipvision-data.csv', 'text/csv');
-});
+if (myIpBtn) {
+  myIpBtn.addEventListener('click', () => {
+    if (ipInput) ipInput.value = '';
+    fetchIpData();
+  });
+}
 
-// Event Listeners
-lookupBtn.addEventListener('click', () => {
-  const query = ipInput.value.trim();
-  fetchIpData(query);
-});
+if (ipInput) {
+  ipInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') fetchIpData(ipInput.value);
+  });
+}
 
-myIpBtn.addEventListener('click', () => {
-  ipInput.value = '';
-  fetchIpData();
-});
+if (exportJsonBtn) {
+  exportJsonBtn.addEventListener('click', () => {
+    if (!currentData) return alert('No data to export!');
+    downloadFile(JSON.stringify(currentData, null, 2), 'ipvision-data.json', 'application/json');
+  });
+}
 
-ipInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    const query = ipInput.value.trim();
-    fetchIpData(query);
-  }
-});
+if (exportCsvBtn) {
+  exportCsvBtn.addEventListener('click', () => {
+    if (!currentData) return alert('No data to export!');
+    const keys = Object.keys(currentData);
+    const values = Object.values(currentData).map(val => 
+      typeof val === 'object' ? `"${JSON.stringify(val).replace(/"/g, '""')}"` : `"${val}"`
+    );
+    downloadFile(`${keys.join(',')}\n${values.join(',')}`, 'ipvision-data.csv', 'text/csv');
+  });
+}
 
-// Automatically fetch user's IP on initial page load
+// Initial fetch on load
 fetchIpData();
