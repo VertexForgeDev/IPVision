@@ -12,19 +12,7 @@
   <meta name="description" content="Discover detailed IP geolocation, network ISP data, timezone, and security information with real-time accuracy using IPVision." />
   <meta name="keywords" content="IPVision, IP Geolocation, Public IP, IP Lookup, Network Intelligence, ISP Lookup, ASN, Timezone" />
   <meta name="author" content="IPVision" />
-  <link rel="canonical" href="https://yourusername.github.io/ipvision/" />
   
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://yourusername.github.io/ipvision/" />
-  <meta property="og:title" content="IPVision | Advanced IP Geolocation" />
-  <meta property="og:description" content="Instant public IP analytics and accurate network location tools." />
-  
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="IPVision | Advanced IP Geolocation" />
-  <meta name="twitter:description" content="Instant public IP analytics and accurate network location tools." />
-
   <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -45,7 +33,15 @@
     }
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- Inline CSS for Glassmorphism Styles -->
+  <style>
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -53,7 +49,6 @@
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "IPVision",
-    "url": "https://yourusername.github.io/ipvision/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "All",
     "description": "Real-time public IP lookup and geolocation intelligence tool."
@@ -73,7 +68,6 @@
   <header class="border-b border-slate-800/80 backdrop-blur-md sticky top-0 z-50 bg-slate-950/70">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- Matching Satellite Logo Container -->
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
           <i class="fa-solid fa-satellite text-white text-lg"></i>
         </div>
@@ -83,7 +77,7 @@
         <button id="btn-share" aria-label="Share Results" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <i class="fa-solid fa-share-nodes"></i>
         </button>
-        <button id="btn-print" aria-label="Print Page" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <button id="btn-print" aria-label="Print Page" onclick="window.print()" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <i class="fa-solid fa-print"></i>
         </button>
       </div>
@@ -100,13 +94,13 @@
       </h1>
       <p class="text-slate-400 text-sm sm:text-base">Instantly lookup public IP address metrics, location boundaries, timezones, and ISP indicators with IPVision.</p>
       
-      <form id="search-form" class="relative flex items-center max-w-xl mx-auto" role="search">
+      <form id="search-form" onsubmit="event.preventDefault();" class="relative flex items-center max-w-xl mx-auto" role="search">
         <div class="relative w-full">
           <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true"></i>
-          <input type="text" id="ip-input" aria-label="IP Address Lookup" placeholder="Enter IP address (e.g. 8.8.8.8)" 
+          <input type="text" id="ipInput" aria-label="IP Address Lookup" placeholder="Enter IP address (e.g. 8.8.8.8)" 
             class="w-full pl-11 pr-28 py-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition shadow-inner" />
         </div>
-        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition flex items-center gap-2 shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400">
+        <button type="submit" id="lookupBtn" class="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition flex items-center gap-2 shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400">
           <span>Lookup</span>
           <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
         </button>
@@ -118,25 +112,25 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
         <div>
           <div class="flex items-center gap-3">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span id="statusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Active Target
             </span>
             <span id="detected-flag" class="text-xl"></span>
           </div>
           <div class="mt-3 flex items-center gap-4">
-            <h2 id="display-ip" class="text-3xl sm:text-5xl font-mono font-bold tracking-tight text-white">---.---.---.---</h2>
+            <h2 id="ipAddress" class="text-3xl sm:text-5xl font-mono font-bold tracking-tight text-white">---.---.---.---</h2>
             <button id="btn-copy-ip" aria-label="Copy IP to Clipboard" class="p-2 text-slate-400 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg">
               <i class="fa-regular fa-copy text-xl"></i>
             </button>
           </div>
-          <p id="display-location" class="text-slate-400 mt-2 flex items-center gap-2">
+          <p id="location" class="text-slate-400 mt-2 flex items-center gap-2">
             <i class="fa-solid fa-location-dot text-indigo-400" aria-hidden="true"></i> Loading location...
           </p>
         </div>
 
         <div class="flex flex-wrap md:flex-col gap-3 justify-start md:justify-end">
-          <button id="btn-refresh" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs sm:text-sm font-medium transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <button id="myIpBtn" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs sm:text-sm font-medium transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <i class="fa-solid fa-rotate" aria-hidden="true"></i> Refresh Self IP
           </button>
           <a id="btn-google-maps" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-medium transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -145,14 +139,6 @@
         </div>
       </div>
     </section>
-
-    <!-- Skeleton Loader -->
-    <div id="skeleton-loader" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-busy="true">
-      <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
-      <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
-      <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
-      <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
-    </div>
 
     <!-- Data Grid -->
     <section id="data-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -185,7 +171,7 @@
           <i class="fa-solid fa-network-wired text-indigo-400" aria-hidden="true"></i> Network / ISP
         </div>
         <div class="mt-3 space-y-1">
-          <p id="val-isp" class="text-lg font-semibold text-slate-100 truncate">---</p>
+          <p id="isp" class="text-lg font-semibold text-slate-100 truncate">---</p>
           <p id="val-asn" class="text-xs text-slate-400 truncate">---</p>
         </div>
       </div>
@@ -196,8 +182,8 @@
           <i class="fa-regular fa-clock text-indigo-400" aria-hidden="true"></i> Timezone & Local Time
         </div>
         <div class="mt-3 space-y-1">
-          <p id="val-time" class="text-lg font-mono font-semibold text-slate-100">--:--:--</p>
-          <p id="val-timezone" class="text-xs text-slate-400">---</p>
+          <p id="timezone" class="text-lg font-mono font-semibold text-slate-100">---</p>
+          <p id="val-time" class="text-xs text-slate-400">--:--:--</p>
         </div>
       </div>
 
@@ -239,10 +225,10 @@
           <i class="fa-solid fa-file-export text-indigo-400" aria-hidden="true"></i> Export Result
         </div>
         <div class="mt-4 flex gap-2">
-          <button id="btn-export-json" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <button id="exportJsonBtn" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             JSON
           </button>
-          <button id="btn-export-csv" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <button id="exportCsvBtn" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             CSV
           </button>
         </div>
@@ -271,9 +257,6 @@
       <p>&copy; 2026 IPVision. Built for speed, security, and privacy.</p>
     </div>
   </footer>
-
-  <!-- Toast Notification Container -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2" aria-live="polite"></div>
 
   <script src="script.js"></script>
 </body>
