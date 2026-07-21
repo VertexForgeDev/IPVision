@@ -19,44 +19,47 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // 3. Extract parameters from query string
+    // 3. Extract and clean target IP parameter
     const url = new URL(request.url);
-    const targetIp = url.searchParams.get('ip') || '';
+    let targetIp = url.searchParams.get('ip') || '';
+
+    // Extract real client static/public IP if blank or 'self'
+    if (!targetIp || ['self', 'undefined', 'null'].includes(targetIp.trim().toLowerCase())) {
+      targetIp = request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip') || '';
+    }
+
+    targetIp = targetIp.replace(/^\[|\]$/g, '').trim();
 
     // 4. Validate API key environment binding
-    if (!env.RAPIDAPI) {
+    const apiKey = env?.RAPIDAPI || globalThis?.RAPIDAPI;
+    if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'Server configuration error: RAPIDAPI key is missing.' }),
+        JSON.stringify({ error: 'Server configuration error: RAPIDAPI key is missing in Worker settings.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // RapidAPI IP Location Endpoint Configuration
-    const RAPIDAPI_HOST = 'ip-location5.p.rapidapi.com';
-    const targetUrl = `https://${RAPIDAPI_HOST}/get_ip_info?ip=${encodeURIComponent(targetIp)}`;
+    // 5. Correct RapidAPI Endpoint (Matches script.js structure)
+    const RAPIDAPI_HOST = 'ip-geolocation-ipwhois-io.p.rapidapi.com';
+    const targetUrl = targetIp
+      ? `https://${RAPIDAPI_HOST}/json/?ip=${encodeURIComponent(targetIp)}`
+      : `https://${RAPIDAPI_HOST}/json/`;
 
     try {
-      // 5. Proxy request to RapidAPI with secret key
+      // 6. Proxy request to RapidAPI with secret key
       const apiResponse = await fetch(targetUrl, {
         method: 'GET',
         headers: {
-          'x-rapidapi-key': env.RAPIDAPI,
+          'x-rapidapi-key': apiKey,
           'x-rapidapi-host': RAPIDAPI_HOST,
         },
       });
 
-      if (!apiResponse.ok) {
-        return new Response(
-          JSON.stringify({ error: `Upstream API error: ${apiResponse.statusText}` }),
-          { status: apiResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
       const data = await apiResponse.json();
 
-      // 6. Return response to frontend
+      // 7. Return response to frontend
       return new Response(JSON.stringify(data), {
-        status: 200,
+        status: apiResponse.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
 
