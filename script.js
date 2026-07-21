@@ -1,83 +1,47 @@
-const PROXY_ENDPOINT = 'https://ipvision-proxy.jozefmasiar.workers.dev';
+const PROXY_ENDPOINT = 'https://ipvision-proxy.jozefmasiar.workers.dev/';
 
 // DOM Elements
 const ipInput = document.getElementById('ipInput');
+const searchForm = document.getElementById('search-form');
 const lookupBtn = document.getElementById('lookupBtn');
 const myIpBtn = document.getElementById('myIpBtn');
+const ipAddressEl = document.getElementById('ipAddress');
+const locationEl = document.getElementById('location');
 const statusBadge = document.getElementById('statusBadge');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const detectedFlag = document.getElementById('detected-flag');
-
-// Main Display Elements
-const ipAddressEl = document.getElementById('ipAddress');
-const locationEl = document.getElementById('location');
-const ispEl = document.getElementById('isp');
-const timezoneEl = document.getElementById('timezone');
-
-// Grid Data Elements
-const valCountry = document.getElementById('val-country');
-const valRegion = document.getElementById('val-region');
-const valCoords = document.getElementById('val-coords');
-const valPostal = document.getElementById('val-postal');
-const valAsn = document.getElementById('val-asn');
-const valTime = document.getElementById('val-time');
-const valCurrency = document.getElementById('val-currency');
-const valCalling = document.getElementById('val-calling');
-const valContinent = document.getElementById('val-continent');
-const valLanguages = document.getElementById('val-languages');
-const securityBadges = document.getElementById('val-security-badges');
-const googleMapsBtn = document.getElementById('btn-google-maps');
+const btnGoogleMaps = document.getElementById('btn-google-maps');
 const historyContainer = document.getElementById('history-container');
 
-// Share & Copy Buttons
-const btnCopyIp = document.getElementById('btn-copy-ip');
-const btnShare = document.getElementById('btn-share');
-const btnClearHistory = document.getElementById('btn-clear-history');
-
-// State Management
 let currentData = null;
-let lookupHistory = JSON.parse(localStorage.getItem('ipvision_history') || '[]');
+let historyList = JSON.parse(localStorage.getItem('ipvision_history') || '[]');
 
-function setStatus(text, isError = false) {
-  if (statusBadge) {
-    statusBadge.innerHTML = isError 
-      ? `<span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span> ${text}`
-      : `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ${text}`;
-    statusBadge.className = isError
-      ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20'
-      : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-  }
-}
-
-function toggleLoading(isLoading) {
-  if (loadingSpinner) {
-    isLoading ? loadingSpinner.classList.remove('hidden') : loadingSpinner.classList.add('hidden');
-  }
-  if (lookupBtn) lookupBtn.disabled = isLoading;
-  if (myIpBtn) myIpBtn.disabled = isLoading;
-}
-
+// -------------------------------------------------------------
+// Fetch & Process IP Data
+// -------------------------------------------------------------
 async function fetchIpData(ip = '') {
+  const targetIp = ip.trim();
   toggleLoading(true);
   setStatus('Fetching target data...');
 
   try {
-    const cleanIp = ip.trim();
-    const url = cleanIp ? `${PROXY_ENDPOINT}?ip=${encodeURIComponent(cleanIp)}` : PROXY_ENDPOINT;
-    
-    const response = await fetch(url);
+    // Pass the input IP, or 'self' if blank to let Worker extract browser IP
+    const queryParam = targetIp ? `?ip=${encodeURIComponent(targetIp)}` : '?ip=self';
+    const response = await fetch(`${PROXY_ENDPOINT}${queryParam}`);
+
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: Failed to reach gateway`);
+      throw new Error(`HTTP ${response.status}: Gateway error`);
     }
 
     const data = await response.json();
+
     if (data.error || data.success === false) {
-      throw new Error(data.message || data.error || 'Invalid IP or Lookup Failed');
+      throw new Error(data.message || data.error || 'Invalid IP or lookup failed');
     }
 
     currentData = data;
     displayResults(data);
-    addToHistory(data.ip || cleanIp);
+    addToHistory(data.ip || targetIp);
     setStatus('Active Target');
   } catch (error) {
     console.error('Fetch error:', error);
@@ -89,212 +53,160 @@ async function fetchIpData(ip = '') {
   }
 }
 
+// -------------------------------------------------------------
+// Render Results into UI
+// -------------------------------------------------------------
 function displayResults(data) {
-  // IP & Basic Info
-  const ipVal = data.ip || 'N/A';
-  if (ipAddressEl) ipAddressEl.textContent = ipVal;
+  // Main Hero Info
+  if (ipAddressEl) ipAddressEl.textContent = data.ip || '---';
   
-  // Country Flag Image
-  if (detectedFlag) {
-    if (data.country_flag) {
-      detectedFlag.innerHTML = `<img src="${data.country_flag}" alt="Flag" class="w-6 h-4 inline-block rounded shadow-sm" />`;
-    } else if (data.flag?.emoji) {
-      detectedFlag.textContent = data.flag.emoji;
-    } else {
-      detectedFlag.textContent = '';
-    }
-  }
-
-  // Location string
   const city = data.city || '';
   const region = data.region || '';
-  const country = data.country || '';
-  const locArr = [city, region, country].filter(Boolean);
+  const country = data.country || 'Unknown';
+  const locString = [city, region, country].filter(Boolean).join(', ');
   
   if (locationEl) {
-    locationEl.innerHTML = `<i class="fa-solid fa-location-dot text-indigo-400" aria-hidden="true"></i> ${locArr.length > 0 ? locArr.join(', ') : 'N/A'}`;
+    locationEl.innerHTML = `<i class="fa-solid fa-location-dot text-indigo-400"></i> ${locString}`;
   }
 
-  // Network / ISP (handling ipwhois connection object)
-  const ispName = data.connection?.isp || data.isp || data.org || 'N/A';
-  const asnVal = data.connection?.asn ? `AS${data.connection.asn}` : (data.asn || 'N/A');
-  const orgName = data.connection?.org || data.org || '';
-
-  if (ispEl) ispEl.textContent = ispName;
-  if (valAsn) valAsn.textContent = `${asnVal}${orgName ? ` (${orgName})` : ''}`;
-
-  // Timezone Details
-  const tzObj = data.timezone || {};
-  const tzId = typeof tzObj === 'string' ? tzObj : (tzObj.id || tzObj.name || 'N/A');
-  const currentTime = tzObj.current_time ? new Date(tzObj.current_time).toLocaleTimeString() : (tzObj.utc ? `UTC ${tzObj.utc}` : 'N/A');
-
-  if (timezoneEl) timezoneEl.textContent = tzId;
-  if (valTime) valTime.textContent = `Local Time: ${currentTime}`;
-
-  // Grid Data Mappings
-  if (valCountry) valCountry.textContent = country ? `${country} (${data.country_code || ''})` : 'N/A';
-  if (valRegion) valRegion.textContent = [city, region].filter(Boolean).join(', ') || 'N/A';
-  
-  const lat = data.latitude;
-  const lon = data.longitude;
-  if (valCoords) valCoords.textContent = (lat !== undefined && lon !== undefined) ? `${lat}, ${lon}` : 'N/A';
-  if (valPostal) valPostal.textContent = `Postal Code: ${data.postal || 'N/A'}`;
-  
-  // Currency & Dialing Code
-  const currCode = data.currency?.code || data.currency_code || data.currency || 'N/A';
-  const currSymbol = data.currency?.symbol || data.currency_symbol || '';
-  if (valCurrency) valCurrency.textContent = `${currCode} ${currSymbol ? `(${currSymbol})` : ''}`;
-  if (valCalling) valCalling.textContent = `Calling Code: ${data.country_phone || data.calling_code || 'N/A'}`;
-  
-  // Continent & Languages
-  if (valContinent) valContinent.textContent = data.continent || 'N/A';
-  if (valLanguages) valLanguages.textContent = `Neighbours: ${data.country_neighbours || data.languages || 'N/A'}`;
-
-  // Security Indicators
-  if (securityBadges) {
-    if (data.security) {
-      const isProxy = data.security.proxy || data.security.vpn || data.security.tor;
-      securityBadges.innerHTML = `
-        <span class="px-2 py-1 rounded text-xs ${isProxy ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">
-          Proxy/VPN: ${isProxy ? 'Detected' : 'Clean'}
-        </span>
-        <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-300">
-          Type: ${data.type || 'IPv4'}
-        </span>
-      `;
-    } else {
-      securityBadges.innerHTML = `
-        <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-300">Type: ${data.type || 'IPv4'}</span>
-        <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-400">Security: Standard</span>
-      `;
-    }
+  // Flag (Emoji or SVG)
+  if (detectedFlag) {
+    detectedFlag.textContent = data.flag?.emoji || data.country_flag || '🌐';
   }
 
-  // Google Maps Redirection
-  if (googleMapsBtn) {
-    if (lat !== undefined && lon !== undefined) {
-      googleMapsBtn.href = `https://www.google.com/maps?q=${lat},${lon}`;
-      googleMapsBtn.classList.remove('pointer-events-none', 'opacity-50');
-    } else {
-      googleMapsBtn.classList.add('pointer-events-none', 'opacity-50');
-    }
+  // Google Maps Link
+  if (btnGoogleMaps && data.latitude && data.longitude) {
+    btnGoogleMaps.href = `https://www.google.com/maps?q=${data.latitude},${data.longitude}`;
+  }
+
+  // Data Grid Fields
+  setElText('val-country', `${country} (${data.country_code || 'N/A'})`);
+  setElText('val-region', `${region || 'N/A'}, ${city || 'N/A'}`);
+  setElText('val-coords', `${data.latitude ?? 0}, ${data.longitude ?? 0}`);
+  setElText('val-postal', `Postal: ${data.postal || 'N/A'}`);
+  
+  // Connection / ISP
+  const ispName = data.connection?.isp || data.isp || '---';
+  const asnNum = data.connection?.asn || data.asn || '---';
+  setElText('isp', ispName);
+  setElText('val-asn', `ASN: ${asnNum}`);
+
+  // Timezone & Time
+  const tz = data.timezone?.id || data.timezone || '---';
+  const currentTime = data.timezone?.current_time 
+    ? new Date(data.timezone.current_time).toLocaleTimeString() 
+    : '--:--:--';
+  setElText('timezone', tz);
+  setElText('val-time', `Local Time: ${currentTime}`);
+
+  // Currency & Calling Code
+  const curr = data.currency?.name ? `${data.currency.name} (${data.currency.code})` : '---';
+  setElText('val-currency', curr);
+  setElText('val-calling', `Calling Code: +${data.country_phone || data.calling_code || '---'}`);
+
+  // Continent
+  setElText('val-continent', data.continent || '---');
+  setElText('val-languages', `Capital: ${data.country_capital || '---'}`);
+
+  // Security Badges
+  const securityContainer = document.getElementById('val-security-badges');
+  if (securityContainer) {
+    const isProxy = data.security?.proxy || false;
+    const isVpn = data.security?.vpn || false;
+    const isTor = data.security?.tor || false;
+
+    securityContainer.innerHTML = `
+      <span class="px-2 py-1 rounded text-xs ${isProxy || isVpn || isTor ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}">
+        ${isProxy ? 'Proxy' : isVpn ? 'VPN' : isTor ? 'Tor' : 'Clean / Direct'}
+      </span>
+    `;
   }
 }
 
-// History Handling
+// Helper to safely set textContent
+function setElText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+// Status & Loading Helpers
+function setStatus(text, isError = false) {
+  if (!statusBadge) return;
+  statusBadge.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+    isError 
+      ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
+      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+  }`;
+  statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${isError ? 'bg-rose-400' : 'bg-emerald-400 animate-pulse'}"></span> ${text}`;
+}
+
+function toggleLoading(isLoading) {
+  if (loadingSpinner) {
+    loadingSpinner.classList.toggle('hidden', !isLoading);
+  }
+}
+
+// -------------------------------------------------------------
+// History Management
+// -------------------------------------------------------------
 function addToHistory(ip) {
-  if (!ip || ip === 'N/A') return;
-  lookupHistory = [ip, ...lookupHistory.filter(item => item !== ip)].slice(0, 8);
-  localStorage.setItem('ipvision_history', JSON.stringify(lookupHistory));
+  if (!ip || ip === 'self') return;
+  historyList = [ip, ...historyList.filter(item => item !== ip)].slice(0, 8);
+  localStorage.setItem('ipvision_history', JSON.stringify(historyList));
   renderHistory();
 }
 
 function renderHistory() {
   if (!historyContainer) return;
-  if (lookupHistory.length === 0) {
-    historyContainer.innerHTML = `<span class="text-xs text-slate-500 italic">No recent lookups recorded.</span>`;
+  if (historyList.length === 0) {
+    historyContainer.innerHTML = '<span class="text-xs text-slate-500 italic">No recent lookups recorded.</span>';
     return;
   }
 
-  historyContainer.innerHTML = lookupHistory
-    .map(ip => `<button onclick="fetchIpData('${ip}')" class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-mono text-indigo-300 hover:text-white transition">${ip}</button>`)
+  historyContainer.innerHTML = historyList
+    .map(ip => `<button onclick="fetchIpData('${ip}')" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-mono text-indigo-300 transition">${ip}</button>`)
     .join('');
 }
 
-// File Downloads
-function downloadFile(content, filename, contentType) {
-  const blob = new Blob([content], { type: contentType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// Event Listeners
-if (lookupBtn) {
-  lookupBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    fetchIpData(ipInput ? ipInput.value : '');
-  });
-}
-
-if (myIpBtn) {
-  myIpBtn.addEventListener('click', () => {
-    if (ipInput) ipInput.value = '';
-    fetchIpData();
-  });
-}
-
-if (ipInput) {
-  ipInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+// -------------------------------------------------------------
+// Event Listeners & Initialization
+// -------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  // Form submission (Lookup button or Enter key)
+  if (searchForm) {
+    searchForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      fetchIpData(ipInput.value);
+      const val = ipInput ? ipInput.value.trim() : '';
+      if (val) fetchIpData(val);
+    });
+  }
+
+  // Refresh Self IP button
+  if (myIpBtn) {
+    myIpBtn.addEventListener('click', () => {
+      if (ipInput) ipInput.value = '';
+      fetchIpData('');
+    });
+  }
+
+  // Copy IP to Clipboard
+  document.getElementById('btn-copy-ip')?.addEventListener('click', () => {
+    const text = ipAddressEl?.textContent;
+    if (text && text !== '---.---.---.---') {
+      navigator.clipboard.writeText(text);
+      alert(`Copied IP: ${text}`);
     }
   });
-}
 
-if (btnCopyIp) {
-  btnCopyIp.addEventListener('click', () => {
-    if (currentData && currentData.ip) {
-      navigator.clipboard.writeText(currentData.ip);
-      const icon = btnCopyIp.querySelector('i');
-      if (icon) {
-        icon.className = 'fa-solid fa-check text-emerald-400 text-xl';
-        setTimeout(() => icon.className = 'fa-regular fa-copy text-xl', 2000);
-      }
-    }
-  });
-}
-
-if (btnShare) {
-  btnShare.addEventListener('click', () => {
-    if (navigator.share && currentData) {
-      navigator.share({
-        title: 'IPVision Lookup',
-        text: `IP: ${currentData.ip} - ${currentData.city}, ${currentData.country}`,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Page URL copied to clipboard!');
-    }
-  });
-}
-
-if (btnClearHistory) {
-  btnClearHistory.addEventListener('click', () => {
-    lookupHistory = [];
+  // Clear History
+  document.getElementById('btn-clear-history')?.addEventListener('click', () => {
+    historyList = [];
     localStorage.removeItem('ipvision_history');
     renderHistory();
   });
-}
 
-const exportJsonBtn = document.getElementById('exportJsonBtn');
-const exportCsvBtn = document.getElementById('exportCsvBtn');
-
-if (exportJsonBtn) {
-  exportJsonBtn.addEventListener('click', () => {
-    if (!currentData) return alert('No data available to export.');
-    downloadFile(JSON.stringify(currentData, null, 2), `ipvision-${currentData.ip || 'data'}.json`, 'application/json');
-  });
-}
-
-if (exportCsvBtn) {
-  exportCsvBtn.addEventListener('click', () => {
-    if (!currentData) return alert('No data available to export.');
-    const keys = Object.keys(currentData);
-    const values = Object.values(currentData).map(val => 
-      typeof val === 'object' ? `"${JSON.stringify(val).replace(/"/g, '""')}"` : `"${val}"`
-    );
-    downloadFile(`${keys.join(',')}\n${values.join(',')}`, `ipvision-${currentData.ip || 'data'}.csv`, 'text/csv');
-  });
-}
-
-// Initial Load
-renderHistory();
-fetchIpData();
+  renderHistory();
+  
+  // Initial load: lookup user's current static/public IP
+  fetchIpData('');
+});
