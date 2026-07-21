@@ -1,66 +1,190 @@
-export default {
-  async fetch(request, env) {
-    // 1. Handle CORS Preflight
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      });
-    }
+/*
+=================================================
+ IPVision Frontend Script
 
-    // 2. Parse Requested Target IP
-    const url = new URL(request.url);
-    let targetIp = url.searchParams.get("ip") || "";
+ Cloudflare Worker:
+ https://ipvision-proxy.jozefmasiar.workers.dev/
 
-    // Clear empty strings or invalid default text ('self', 'null', 'undefined')
-    const invalidValues = ["self", "undefined", "null"];
-    if (!targetIp || invalidValues.includes(targetIp.trim().toLowerCase())) {
-      targetIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-real-ip") || "";
-    }
+ Gets:
+ - Real visitor IP
+ - Country
+ - City
+ - Region
+ - Timezone
+ - ISP
 
-    // Sanitize IPv6 brackets & whitespace
-    targetIp = targetIp.replace(/^\[|\]$/g, "").trim();
+=================================================
+*/
 
-    // 3. Verify RapidAPI Key
-    const apiKey = env?.RAPIDAPI || globalThis?.RAPIDAPI;
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: "RAPIDAPI secret key is missing in Cloudflare Worker settings." }),
-        { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
-    }
+
+async function loadIPVision() {
+
+    const workerURL =
+        "https://ipvision-proxy.jozefmasiar.workers.dev/?nocache="
+        + Date.now();
+
 
     try {
-      // 4. Always pass `?ip=` parameter to RapidAPI so root requests don't return 404
-      const upstreamUrl = targetIp
-        ? `https://ip-geolocation-ipwhois-io.p.rapidapi.com/json/?ip=${encodeURIComponent(targetIp)}`
-        : `https://ip-geolocation-ipwhois-io.p.rapidapi.com/json/?ip=`;
 
-      const upstreamResponse = await fetch(upstreamUrl, {
-        method: "GET",
-        headers: {
-          "x-rapidapi-key": apiKey,
-          "x-rapidapi-host": "ip-geolocation-ipwhois-io.p.rapidapi.com",
-        },
-      });
 
-      const data = await upstreamResponse.json();
+        const response = await fetch(
+            workerURL,
+            {
+                method: "GET",
+                cache: "no-store"
+            }
+        );
 
-      return new Response(JSON.stringify(data), {
-        status: upstreamResponse.status,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    } catch (err) {
-      return new Response(
-        JSON.stringify({ error: "Worker Gateway Error: " + err.message }),
-        { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Worker HTTP error: "
+                + response.status
+            );
+
+        }
+
+
+
+        const data =
+            await response.json();
+
+
+
+        console.log(
+            "IPVision response:",
+            data
+        );
+
+
+
+        /*
+        Update elements safely
+        */
+
+
+        const ipElement =
+            document.getElementById("ip");
+
+
+        const countryElement =
+            document.getElementById("country");
+
+
+        const cityElement =
+            document.getElementById("city");
+
+
+        const regionElement =
+            document.getElementById("region");
+
+
+        const timezoneElement =
+            document.getElementById("timezone");
+
+
+        const ispElement =
+            document.getElementById("isp");
+
+
+
+
+        if (ipElement) {
+
+            ipElement.textContent =
+                data.client_ip ||
+                data.ip ||
+                "N/A";
+
+        }
+
+
+
+        if (countryElement) {
+
+            countryElement.textContent =
+                data.country ||
+                data.country_code ||
+                "N/A";
+
+        }
+
+
+
+        if (cityElement) {
+
+            cityElement.textContent =
+                data.city ||
+                "N/A";
+
+        }
+
+
+
+        if (regionElement) {
+
+            regionElement.textContent =
+                data.region ||
+                "N/A";
+
+        }
+
+
+
+        if (timezoneElement) {
+
+            timezoneElement.textContent =
+                data.timezone ||
+                "N/A";
+
+        }
+
+
+
+        if (ispElement) {
+
+            ispElement.textContent =
+                data.isp ||
+                "N/A";
+
+        }
+
+
+
+
+    } catch(error) {
+
+
+        console.error(
+            "IPVision error:",
+            error
+        );
+
+
+
+        const ipElement =
+            document.getElementById("ip");
+
+
+        if (ipElement) {
+
+            ipElement.textContent =
+                "N/A";
+
+        }
+
+
     }
-  },
-};
+
+}
+
+
+
+
+// Start automatically
+
+document.addEventListener(
+    "DOMContentLoaded",
+    loadIPVision
+);
