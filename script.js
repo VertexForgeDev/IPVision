@@ -110,7 +110,6 @@ async function fetchIpData(ip = '') {
 }
 
 function displayResults(data) {
-  // FIXED: Read client_ip from Cloudflare worker output
   const ipVal = data.client_ip || data.ip || 'N/A';
   if (ipAddressEl) ipAddressEl.textContent = ipVal;
 
@@ -151,11 +150,12 @@ function displayResults(data) {
   if (valCoords) valCoords.textContent = (lat !== null && lon !== null && lat !== undefined && lon !== undefined) ? `${lat}, ${lon}` : 'N/A';
   if (valPostal) valPostal.textContent = `Postal Code: N/A`;
 
-  if (valCurrency) valCurrency.textContent = 'N/A';
-  if (valCalling) valCalling.textContent = `Calling Code: N/A`;
+  // FIXED: Properly mapped from worker response properties
+  if (valCurrency) valCurrency.textContent = data.currency || 'N/A';
+  if (valCalling) valCalling.textContent = `Calling Code: ${data.calling_code || 'N/A'}`;
 
-  if (valContinent) valContinent.textContent = 'N/A';
-  if (valLanguages) valLanguages.textContent = `Neighbours: N/A`;
+  if (valContinent) valContinent.textContent = data.continent || 'N/A';
+  if (valLanguages) valLanguages.textContent = `Neighbours: ${data.neighbours || 'N/A'}`;
 
   if (securityBadges) {
     securityBadges.innerHTML = `
