@@ -8,9 +8,7 @@ export default {
     };
 
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: corsHeaders
-      });
+      return new Response(null, { headers: corsHeaders });
     }
 
     try {
@@ -32,23 +30,15 @@ export default {
         }, null, 2),
         {
           status: 200,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     } catch(error) {
       return new Response(
-        JSON.stringify({
-          error: error.message
-        }),
+        JSON.stringify({ error: error.message }),
         {
           status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
