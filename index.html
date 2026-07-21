@@ -3,23 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GeoPulse | Advanced IP Geolocation & Network Intelligence</title>
+  <title>IPVision | Advanced IP Geolocation & Network Intelligence</title>
   
+  <!-- Satellite Favicon (URL-Encoded SVG matching the logo) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%236366f1' d='M480 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v28.7L283.3 193.3c-9.4 9.4-9.4 24.6 0 33.9l61.5 61.5c9.4 9.4 24.6 9.4 33.9 0L512 155.3V128c0-17.7-14.3-32-32-32s-32 14.3-32 32v28.7l-48 48-18.7-18.7L480 87.3V32zM0 352c0 17.7 14.3 32 32 32s32-14.3 32-32v-28.7l132.7-132.7c9.4-9.4 9.4-24.6 0-33.9L135.2 95.2c-9.4-9.4-24.6-9.4-33.9 0L0 196.7V224c0 17.7 14.3 32 32 32s32-14.3 32-32v-28.7l48-48 18.7 18.7L32 264.7V352zm224 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm-64 64a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm128 0a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm-64 64a32 32 0 1 0 0-64 32 32 0 1 0 0 64z'/%3E%3C/svg%3E" />
+
   <!-- SEO & Social Meta Tags -->
-  <meta name="description" content="Discover detailed IP geolocation, network ISP data, timezone, and security information with real-time accuracy." />
-  <meta name="keywords" content="IP Geolocation, Public IP, IP Lookup, Network Intelligence, ISP Lookup, ASN, Timezone" />
-  <meta name="author" content="GeoPulse" />
-  <link rel="canonical" href="https://yourusername.github.io/geopulse/" />
+  <meta name="description" content="Discover detailed IP geolocation, network ISP data, timezone, and security information with real-time accuracy using IPVision." />
+  <meta name="keywords" content="IPVision, IP Geolocation, Public IP, IP Lookup, Network Intelligence, ISP Lookup, ASN, Timezone" />
+  <meta name="author" content="IPVision" />
+  <link rel="canonical" href="https://yourusername.github.io/ipvision/" />
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://yourusername.github.io/geopulse/" />
-  <meta property="og:title" content="GeoPulse | Advanced IP Geolocation" />
+  <meta property="og:url" content="https://yourusername.github.io/ipvision/" />
+  <meta property="og:title" content="IPVision | Advanced IP Geolocation" />
   <meta property="og:description" content="Instant public IP analytics and accurate network location tools." />
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="GeoPulse | Advanced IP Geolocation" />
+  <meta name="twitter:title" content="IPVision | Advanced IP Geolocation" />
   <meta name="twitter:description" content="Instant public IP analytics and accurate network location tools." />
 
   <!-- Tailwind CSS & FontAwesome -->
@@ -49,8 +52,8 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "GeoPulse",
-    "url": "https://yourusername.github.io/geopulse/",
+    "name": "IPVision",
+    "url": "https://yourusername.github.io/ipvision/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "All",
     "description": "Real-time public IP lookup and geolocation intelligence tool."
@@ -60,7 +63,7 @@
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
 
   <!-- Background Decorative Glows -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
     <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
     <div class="absolute top-1/3 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
     <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
@@ -70,16 +73,17 @@
   <header class="border-b border-slate-800/80 backdrop-blur-md sticky top-0 z-50 bg-slate-950/70">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
+        <!-- Matching Satellite Logo Container -->
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-          <i class="fa-solid me-0 fa-location-crosshairs text-white text-lg"></i>
+          <i class="fa-solid fa-satellite text-white text-lg"></i>
         </div>
-        <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">GeoPulse</span>
+        <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">IPVision</span>
       </div>
       <div class="flex items-center gap-2">
-        <button id="btn-share" aria-label="Share Results" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white">
+        <button id="btn-share" aria-label="Share Results" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <i class="fa-solid fa-share-nodes"></i>
         </button>
-        <button id="btn-print" aria-label="Print Page" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white">
+        <button id="btn-print" aria-label="Print Page" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 transition text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <i class="fa-solid fa-print"></i>
         </button>
       </div>
@@ -94,17 +98,17 @@
       <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
         Network Intelligence <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">at a Glance</span>
       </h1>
-      <p class="text-slate-400 text-sm sm:text-base">Instantly lookup public IP address metrics, location boundaries, timezones, and ISP indicators.</p>
+      <p class="text-slate-400 text-sm sm:text-base">Instantly lookup public IP address metrics, location boundaries, timezones, and ISP indicators with IPVision.</p>
       
-      <form id="search-form" class="relative flex items-center max-w-xl mx-auto">
+      <form id="search-form" class="relative flex items-center max-w-xl mx-auto" role="search">
         <div class="relative w-full">
-          <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-          <input type="text" id="ip-input" placeholder="Enter IP address (e.g. 8.8.8.8)" 
+          <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true"></i>
+          <input type="text" id="ip-input" aria-label="IP Address Lookup" placeholder="Enter IP address (e.g. 8.8.8.8)" 
             class="w-full pl-11 pr-28 py-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition shadow-inner" />
         </div>
-        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition flex items-center gap-2 shadow-md">
+        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition flex items-center gap-2 shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400">
           <span>Lookup</span>
-          <i class="fa-solid fa-arrow-right text-xs"></i>
+          <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
         </button>
       </form>
     </section>
@@ -122,28 +126,28 @@
           </div>
           <div class="mt-3 flex items-center gap-4">
             <h2 id="display-ip" class="text-3xl sm:text-5xl font-mono font-bold tracking-tight text-white">---.---.---.---</h2>
-            <button id="btn-copy-ip" aria-label="Copy IP" class="p-2 text-slate-400 hover:text-white transition">
+            <button id="btn-copy-ip" aria-label="Copy IP to Clipboard" class="p-2 text-slate-400 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg">
               <i class="fa-regular fa-copy text-xl"></i>
             </button>
           </div>
           <p id="display-location" class="text-slate-400 mt-2 flex items-center gap-2">
-            <i class="fa-solid fa-location-dot text-indigo-400"></i> Loading location...
+            <i class="fa-solid fa-location-dot text-indigo-400" aria-hidden="true"></i> Loading location...
           </p>
         </div>
 
         <div class="flex flex-wrap md:flex-col gap-3 justify-start md:justify-end">
-          <button id="btn-refresh" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs sm:text-sm font-medium transition flex items-center gap-2">
-            <i class="fa-solid fa-rotate"></i> Refresh Self IP
+          <button id="btn-refresh" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs sm:text-sm font-medium transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <i class="fa-solid fa-rotate" aria-hidden="true"></i> Refresh Self IP
           </button>
-          <a id="btn-google-maps" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-medium transition flex items-center gap-2">
-            <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+          <a id="btn-google-maps" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-medium transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> View on Google Maps
           </a>
         </div>
       </div>
     </section>
 
     <!-- Skeleton Loader -->
-    <div id="skeleton-loader" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="skeleton-loader" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-busy="true">
       <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
       <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
       <div class="h-28 rounded-xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
@@ -156,7 +160,7 @@
       <!-- Country & Region -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-earth-americas text-indigo-400"></i> Location Details
+          <i class="fa-solid fa-earth-americas text-indigo-400" aria-hidden="true"></i> Location Details
         </div>
         <div class="mt-3 space-y-1">
           <p id="val-country" class="text-lg font-semibold text-slate-100">---</p>
@@ -167,7 +171,7 @@
       <!-- Coordinates -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-compass text-indigo-400"></i> Coordinates
+          <i class="fa-solid fa-compass text-indigo-400" aria-hidden="true"></i> Coordinates
         </div>
         <div class="mt-3 space-y-1">
           <p id="val-coords" class="text-lg font-mono font-semibold text-slate-100">0.00, 0.00</p>
@@ -178,7 +182,7 @@
       <!-- Network Provider -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-network-wired text-indigo-400"></i> Network / ISP
+          <i class="fa-solid fa-network-wired text-indigo-400" aria-hidden="true"></i> Network / ISP
         </div>
         <div class="mt-3 space-y-1">
           <p id="val-isp" class="text-lg font-semibold text-slate-100 truncate">---</p>
@@ -189,7 +193,7 @@
       <!-- Timezone & Time -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-regular fa-clock text-indigo-400"></i> Timezone & Local Time
+          <i class="fa-regular fa-clock text-indigo-400" aria-hidden="true"></i> Timezone & Local Time
         </div>
         <div class="mt-3 space-y-1">
           <p id="val-time" class="text-lg font-mono font-semibold text-slate-100">--:--:--</p>
@@ -197,10 +201,10 @@
         </div>
       </div>
 
-      <!-- Flags / Detection -->
+      <!-- Security Indicators -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-shield-halved text-indigo-400"></i> Security Indicators
+          <i class="fa-solid fa-shield-halved text-indigo-400" aria-hidden="true"></i> Security Indicators
         </div>
         <div class="mt-3 flex flex-wrap gap-2" id="val-security-badges">
           <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-300">Proxy/VPN: N/A</span>
@@ -210,7 +214,7 @@
       <!-- Currency & Calling Code -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-coins text-indigo-400"></i> Currency & Dialing
+          <i class="fa-solid fa-coins text-indigo-400" aria-hidden="true"></i> Currency & Dialing
         </div>
         <div class="mt-3 space-y-1">
           <p id="val-currency" class="text-lg font-semibold text-slate-100">---</p>
@@ -221,7 +225,7 @@
       <!-- Continent -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-globe text-indigo-400"></i> Continent
+          <i class="fa-solid fa-globe text-indigo-400" aria-hidden="true"></i> Continent
         </div>
         <div class="mt-3 space-y-1">
           <p id="val-continent" class="text-lg font-semibold text-slate-100">---</p>
@@ -232,13 +236,13 @@
       <!-- Export Actions -->
       <div class="glass-card p-5 rounded-xl border border-slate-800/80 flex flex-col justify-between">
         <div class="flex items-center gap-3 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-          <i class="fa-solid fa-file-export text-indigo-400"></i> Export Result
+          <i class="fa-solid fa-file-export text-indigo-400" aria-hidden="true"></i> Export Result
         </div>
         <div class="mt-4 flex gap-2">
-          <button id="btn-export-json" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200">
+          <button id="btn-export-json" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             JSON
           </button>
-          <button id="btn-export-csv" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200">
+          <button id="btn-export-csv" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium transition text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             CSV
           </button>
         </div>
@@ -250,9 +254,9 @@
     <section class="space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-history text-indigo-400"></i> Recent History
+          <i class="fa-solid fa-history text-indigo-400" aria-hidden="true"></i> Recent History
         </h3>
-        <button id="btn-clear-history" class="text-xs text-slate-500 hover:text-rose-400 transition">Clear History</button>
+        <button id="btn-clear-history" class="text-xs text-slate-500 hover:text-rose-400 transition focus:outline-none focus:underline">Clear History</button>
       </div>
       <div id="history-container" class="flex flex-wrap gap-2">
         <span class="text-xs text-slate-500 italic">No recent lookups recorded.</span>
@@ -264,12 +268,12 @@
   <!-- Footer -->
   <footer class="border-t border-slate-800/80 mt-auto py-6 bg-slate-950/80">
     <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
-      <p>&copy; 2026 GeoPulse. Built for speed, security, and privacy.</p>
+      <p>&copy; 2026 IPVision. Built for speed, security, and privacy.</p>
     </div>
   </footer>
 
   <!-- Toast Notification Container -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2" aria-live="polite"></div>
 
   <script src="script.js"></script>
 </body>
