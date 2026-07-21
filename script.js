@@ -1,3 +1,9 @@
+/*
+=================================================
+ IPVision Frontend Script - Fully Synchronized
+=================================================
+*/
+
 const PROXY_ENDPOINT = 'https://ipvision-proxy.jozefmasiar.workers.dev';
 
 // DOM Elements
@@ -60,10 +66,9 @@ function toggleLoading(isLoading) {
 }
 
 async function fetchIpData(ip = '') {
-  let targetIp = ip.trim();
+  let targetIp = typeof ip === 'string' ? ip.trim() : '';
   
-  // Guard against any accidental "self" values
-  if (targetIp.toLowerCase() === 'self') {
+  if (targetIp.toLowerCase() === 'self' || !targetIp) {
     targetIp = '';
   }
 
@@ -71,10 +76,11 @@ async function fetchIpData(ip = '') {
   setStatus('Fetching target data...');
 
   try {
-    // Only pass ?ip= if a real IP was provided by the user
-    const url = targetIp ? `${PROXY_ENDPOINT}?ip=${encodeURIComponent(targetIp)}` : PROXY_ENDPOINT;
+    const url = targetIp 
+      ? `${PROXY_ENDPOINT}?ip=${encodeURIComponent(targetIp)}&nocache=${Date.now()}` 
+      : `${PROXY_ENDPOINT}?nocache=${Date.now()}`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: Gateway error`);
     }
@@ -87,8 +93,9 @@ async function fetchIpData(ip = '') {
     currentData = data;
     displayResults(data);
 
-    if (targetIp) {
-      addToHistory(data.ip || targetIp);
+    const resolvedIp = data.client_ip || data.ip || targetIp;
+    if (resolvedIp) {
+      addToHistory(resolvedIp);
     }
 
     setStatus('Active Target');
@@ -103,17 +110,12 @@ async function fetchIpData(ip = '') {
 }
 
 function displayResults(data) {
-  const ipVal = data.ip || 'N/A';
+  // FIXED: Read client_ip from Cloudflare worker output
+  const ipVal = data.client_ip || data.ip || 'N/A';
   if (ipAddressEl) ipAddressEl.textContent = ipVal;
 
   if (detectedFlag) {
-    if (data.country_flag) {
-      detectedFlag.innerHTML = `<img src="${data.country_flag}" alt="Flag" class="w-6 h-4 inline-block rounded shadow-sm" />`;
-    } else if (data.flag?.emoji) {
-      detectedFlag.textContent = data.flag.emoji;
-    } else {
-      detectedFlag.textContent = '';
-    }
+    detectedFlag.textContent = '';
   }
 
   const city = data.city || '';
@@ -125,57 +127,46 @@ function displayResults(data) {
     locationEl.innerHTML = `<i class="fa-solid fa-location-dot text-indigo-400" aria-hidden="true"></i> ${locArr.length > 0 ? locArr.join(', ') : 'N/A'}`;
   }
 
-  const ispName = data.connection?.isp || data.isp || data.org || 'N/A';
-  const asnVal = data.connection?.asn ? `AS${data.connection.asn}` : (data.asn || 'N/A');
-  const orgName = data.connection?.org || data.org || '';
-
+  const ispName = data.isp || 'N/A';
   if (ispEl) ispEl.textContent = ispName;
-  if (valAsn) valAsn.textContent = `${asnVal}${orgName ? ` (${orgName})` : ''}`;
+  if (valAsn) valAsn.textContent = 'ASN: N/A';
 
-  const tzObj = data.timezone || {};
-  const tzId = typeof tzObj === 'string' ? tzObj : (tzObj.id || tzObj.name || 'N/A');
-  const currentTime = tzObj.current_time ? new Date(tzObj.current_time).toLocaleTimeString() : (tzObj.utc ? `UTC ${tzObj.utc}` : 'N/A');
-
+  const tzId = data.timezone || 'N/A';
   if (timezoneEl) timezoneEl.textContent = tzId;
-  if (valTime) valTime.textContent = `Local Time: ${currentTime}`;
+  
+  if (valTime && data.timezone) {
+    try {
+      const localTimeStr = new Date().toLocaleTimeString('en-US', { timeZone: data.timezone });
+      valTime.textContent = `Local Time: ${localTimeStr}`;
+    } catch (e) {
+      valTime.textContent = `Timezone: ${data.timezone}`;
+    }
+  }
 
-  if (valCountry) valCountry.textContent = country ? `${country} (${data.country_code || ''})` : 'N/A';
+  if (valCountry) valCountry.textContent = country || 'N/A';
   if (valRegion) valRegion.textContent = [city, region].filter(Boolean).join(', ') || 'N/A';
 
   const lat = data.latitude;
   const lon = data.longitude;
-  if (valCoords) valCoords.textContent = (lat !== undefined && lon !== undefined) ? `${lat}, ${lon}` : 'N/A';
-  if (valPostal) valPostal.textContent = `Postal Code: ${data.postal || 'N/A'}`;
+  if (valCoords) valCoords.textContent = (lat !== null && lon !== null && lat !== undefined && lon !== undefined) ? `${lat}, ${lon}` : 'N/A';
+  if (valPostal) valPostal.textContent = `Postal Code: N/A`;
 
-  const currCode = data.currency?.code || data.currency_code || data.currency || 'N/A';
-  const currSymbol = data.currency?.symbol || data.currency_symbol || '';
-  if (valCurrency) valCurrency.textContent = `${currCode} ${currSymbol ? `(${currSymbol})` : ''}`;
-  if (valCalling) valCalling.textContent = `Calling Code: ${data.country_phone || data.calling_code || 'N/A'}`;
+  if (valCurrency) valCurrency.textContent = 'N/A';
+  if (valCalling) valCalling.textContent = `Calling Code: N/A`;
 
-  if (valContinent) valContinent.textContent = data.continent || 'N/A';
-  if (valLanguages) valLanguages.textContent = `Neighbours: ${data.country_neighbours || data.languages || 'N/A'}`;
+  if (valContinent) valContinent.textContent = 'N/A';
+  if (valLanguages) valLanguages.textContent = `Neighbours: N/A`;
 
   if (securityBadges) {
-    if (data.security) {
-      const isProxy = data.security.proxy || data.security.vpn || data.security.tor;
-      securityBadges.innerHTML = `
-        <span class="px-2 py-1 rounded text-xs ${isProxy ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">
-          Proxy/VPN: ${isProxy ? 'Detected' : 'Clean'}
-        </span>
-        <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-300">
-          Type: ${data.type || 'IPv4'}
-        </span>
-      `;
-    } else {
-      securityBadges.innerHTML = `
-        <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-300">Type: ${data.type || 'IPv4'}</span>
-        <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-400">Security: Standard</span>
-      `;
-    }
+    securityBadges.innerHTML = `
+      <span class="px-2 py-1 rounded text-xs bg-slate-800 text-slate-300">
+        Type: Cloudflare Edge Direct
+      </span>
+    `;
   }
 
   if (googleMapsBtn) {
-    if (lat !== undefined && lon !== undefined) {
+    if (lat !== null && lon !== null && lat !== undefined && lon !== undefined) {
       googleMapsBtn.href = `https://www.google.com/maps?q=${lat},${lon}`;
       googleMapsBtn.classList.remove('pointer-events-none', 'opacity-50');
     } else {
@@ -226,7 +217,7 @@ if (lookupBtn) {
 if (myIpBtn) {
   myIpBtn.addEventListener('click', () => {
     if (ipInput) ipInput.value = '';
-    fetchIpData();
+    fetchIpData('');
   });
 }
 
@@ -241,8 +232,8 @@ if (ipInput) {
 
 if (btnCopyIp) {
   btnCopyIp.addEventListener('click', () => {
-    if (currentData && currentData.ip) {
-      navigator.clipboard.writeText(currentData.ip);
+    if (currentData && currentData.client_ip) {
+      navigator.clipboard.writeText(currentData.client_ip);
       const icon = btnCopyIp.querySelector('i');
       if (icon) {
         icon.className = 'fa-solid fa-check text-emerald-400 text-xl';
@@ -257,7 +248,7 @@ if (btnShare) {
     if (navigator.share && currentData) {
       navigator.share({
         title: 'IPVision Lookup',
-        text: `IP: ${currentData.ip} - ${currentData.city}, ${currentData.country}`,
+        text: `IP: ${currentData.client_ip} - ${currentData.city}, ${currentData.country}`,
         url: window.location.href,
       }).catch(() => {});
     } else {
@@ -278,7 +269,7 @@ if (btnClearHistory) {
 if (exportJsonBtn) {
   exportJsonBtn.addEventListener('click', () => {
     if (!currentData) return alert('No data available to export.');
-    downloadFile(JSON.stringify(currentData, null, 2), `ipvision-${currentData.ip || 'data'}.json`, 'application/json');
+    downloadFile(JSON.stringify(currentData, null, 2), `ipvision-${currentData.client_ip || 'data'}.json`, 'application/json');
   });
 }
 
@@ -289,10 +280,10 @@ if (exportCsvBtn) {
     const values = Object.values(currentData).map(val => 
       typeof val === 'object' ? `"${JSON.stringify(val).replace(/"/g, '""')}"` : `"${val}"`
     );
-    downloadFile(`${keys.join(',')}\n${values.join(',')}`, `ipvision-${currentData.ip || 'data'}.csv`, 'text/csv');
+    downloadFile(`${keys.join(',')}\n${values.join(',')}`, `ipvision-${currentData.client_ip || 'data'}.csv`, 'text/csv');
   });
 }
 
 // Initial Page Load Initialization
 renderHistory();
-fetchIpData();
+fetchIpData('');
